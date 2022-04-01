@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width">
+	<link th:href="@{/css/SingleMovie.css}" rel="stylesheet" type="text/css" />
+  <link th:href="@{/css/NavigationBar.css}" rel="stylesheet" type="text/css"/>
+  <link th:href="@{/css/PopularMoviesPage.css}" rel="stylesheet" type="text/css" />
+
+  <style>
+      body {
+         margin:0;
+         padding:0;
+         background-repeat: no-repeat;
+         background-attachment: fixed;
+         background-size: cover;
+      }
+   </style>
+</head>
+
+<!-- Background Size -->
+
+
+<!-- Navigation Bar -->
+<body>
+	<div class="NavigationBar">
+      <!-- Logo Icon -->
+     <a class="active" href="http://localhost:8080/"><img alt="Logo" th:src="@{/css/logo.png}" width="30" height="30"></a>
+   
+       <!-- Popular Movies Icon -->
+       <a class="active" href="http://localhost:8080/popular_movies"><big>Trending Oscar Films</a><big>
+
+       <!-- Search Bar - Search Your Favorite Film? -->
+       <script>
+           function movie_search() {
+           var input, filter, ul, li, a, i, txtValue;
+           input = document.getElementById("myInput");
+           filter = input.value.toUpperCase();
+           ul = document.getElementById("myUL");
+           li = ul.getElementsByTagName("li");
+           for (i = 0; i < li.length; i++) {
+               a = li[i].getElementsByTagName("a")[0];
+               txtValue = a.textContent || a.innerText;
+               if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                   li[i].style.display = "";
+               } else {
+                   li[i].style.display = "none";
+               }
+           }
+           }
+       </script>
+       <form action="http://localhost:8080/movies/search" method="GET">
+         <input style= "margin-top: 5px; margin-left: 150px;" type="search" placeholder="Search Your Favorite Film" name="name">
+         <button type="submit"><i class=" fa fa-search"></i></button>
+       </form>
+       <!-- Contact Us Icon -->
+       <a style = "margin-top: -42.5px;" class="active" href="http://localhost:8080/contact_us"><big>Contact Us</a><big>
+   </div>
+
+
+   <!--Breadcrumb -->
+   <ul class ="breadCrumb"> 
+      <li><a href="http://localhost:8080/">Home</a></li>
+      <li><a href="http://localhost:8080/popular_movies">Trending Oscar Films</a></li>
+      <li>Selected Movie</li>
+   </ul>
+
+   <script th:inline="javascript">
+      var movie = /*[[${movie.get(0)}]]*/ 'name';
+      var movieName = movie.name;
+      var movieYear = movie.year;
+
+     fetch('http://localhost:8080/api/movies/search?name=' + movieName + '&year=' + movieYear)
+         .then(function (response) {
+             return response.json();
+         })
+         .then(function (data) {
+             appendMovie(data);
+
+             return fetch('http://localhost:8080/api/nominations/search?movie_name=' + movieName + '&movie_year=' + movieYear);
+         })
+         .then(function (response) {
+            return response.json();
+         })
+         .then(function (data) {
+            appendAwards(data);
+
+            return fetch('http://localhost:8080/api/nominations');
+         })
+         .then(function (response) {
+            return response.json();
+         })
+         .then(function (data) {
+            appendRecommended(data);
+         })
+         .catch(function (err) {
+             console.log('error: ' + err);
+         });
+     function appendMovie(data) {
+         var mainContainer = document.getElementById("movieDetails");
+         let tab = 
+             `<div>`;
+
+         for (var i = 0; i < data.length; i++) {
+             tab +=
+                 `<title id= "title">${data[i].name}</title>
+                  <p id= "singleMovie_cover">
+                     <img alt='title' src='${data[i].poster}' width="580" height="740"> 
+                  </p>
+                  <p>
+                     <a class="imdb" href="${data[i].imbdLink}"></a>
+                  </p>
+                  <p id = "year" style = "top: 180px;">Year: ${data[i].year}</p>
+                  <p id = "descriptions" style = "top: 315px;">${data[i].description}</p>`;
+         }
+         tab +=
+               `</div>`;
+         mainContainer.innerHTML = tab;
+     }
+     function appendAwards(data) {
+         var mainContainer = document.getElementById("movieAwards");
+         var string = " ";
+         var string2 = " ";
+         for (var i = 0; i < data.length; i++) {
+            if  (data[i].is_winning == true) {
+               string += data[i].awardCategory.name + ", ";
+            }
+            else if (data[i].is_winning == false) {
+               string2 += data[i].awardCategory.name + ", ";
+            }
+         }
+
+         string = string.substring(0, string.length - 2);
+         string2 = string2.substring(0, string2.length - 2);
+
+         let tab = 
+             `<div>
+               <p id = "awarded" style = "top: 220px; color: #B91C1C;">Awarded: ${string}</p>
+               <p id = "nominations" style = "top: 260px; color: #B91C1C;" >Nominations: ${string2}</p>
+            </div>`;
+         mainContainer.innerHTML = tab;
+     }
+     function appendRecommended(data) {
+      var mainContainer = document.getElementById("movieRecommended");
+      let tab = 
+             `<div style = "top: 0px;">
+               <div class="row" style="margin-top: 905px;">`;
+
+         for (var i = 0; i < 5; i++) {
+            let random = Math.floor(Math.random() * data.length);
+             tab +=
+                 `<div class="column">
+                  <a href="http://localhost:8080/popular_movies/single_movie/${data[random].movie.name}/${data[random].movie.year}">   
+                     <img alt="Alt text" src="${data[random].movie.poster}"width="250" height="370"/>
+                  </a>
+                     <p id = "movieTitle">${data[random].movie.name}</p>
+                     <p id = "movieYear" class="movie-year">${data[random].movie.year}</p>
+                  </div>`;
+         }
+         tab +=
+            `</div>
+               </div>`;
+         mainContainer.innerHTML = tab;
+     }
+   </script>
+
+   <!-- Selected Movie Details-->
+   <div id="movieDetails"></div>
+      <!-- Awarded, Nominations-->
+   <div id="movieAwards"></div>
+
+   <!-- Recommendation -->
+   <title id="recommend"hr>Recommendations</title>
+   <div id="movieRecommended"></div>
+   
+</body>
+</html>

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width">
+	<title>Select a Category Page</title>
+
+	<!-- Imported CSS Files-->
+	<link th:href="@{/css/NavigationBar.css}" rel="stylesheet" type="text/css" />
+	<link th:href="@{/css/PopularMoviesPage.css}" rel="stylesheet" type="text/css" />
+   <link th:href="@{/css/Row.css}" rel="stylesheet" type="text/css" />
+
+	<!-- Remove White Border on Page-->
+	<style type "text/css">
+		body {
+			margin: 0;
+			padding: 0;
+			background-color: #FDFFFF;
+      }
+	</style>
+</head>
+
+
+<!-- Navigation Bar -->
+
+<body>
+	<div class="NavigationBar">
+		<!-- Logo Icon -->
+		<a class="active" href="http://localhost:8080/"><img alt="Logo" th:src="@{/css/logo.png}" width="30" height="30"></a>
+    
+     <!-- Popular Movies Icon -->
+      <a class="active" href="http://localhost:8080/popular_movies"><big>Trending Oscar Films</a><big>
+
+      <!-- Search Bar - Search Your Favorite Film? -->
+      <script>
+      function movie_search() {
+      var input, filter, ul, li, a, i, txtValue;
+      input = document.getElementById("myInput");
+      filter = input.value.toUpperCase();
+      ul = document.getElementById("myUL");
+      li = ul.getElementsByTagName("li");
+      for (i = 0; i < li.length; i++) {
+         a = li[i].getElementsByTagName("a")[0];
+         txtValue = a.textContent || a.innerText;
+         if (txtValue.toUpperCase().indexOf(filter) > -1) {
+               li[i].style.display = "";
+         } else {
+               li[i].style.display = "none";
+         }
+         }
+      }
+      </script>
+      <form action="http://localhost:8080/movies/search" method="GET">
+         <input style= "margin-top: 5px; margin-left: 150px;" type="search" placeholder="Search Your Favorite Film" name="name">
+         <button type="submit"><i class=" fa fa-search"></i></button>
+       </form>
+       <!-- Contact Us Icon -->
+       <a style = "margin-top: -42.5px;" class="active" href="http://localhost:8080/contact_us"><big>Contact Us</a><big>
+
+    <!-- Title - Nomandland -->
+      <div th:each="award : ${awards.iterator()}">
+         <p th:text="${award.getName()}" id="headertitle" style=top:380px;> Category Name</p>
+      </div>
+   </div>
+
+      <img alt="Poster Cover" th:src="@{/css/oscarbackground.png}" height="500" width="1440">
+      
+      <!-- Breadcrumb -->
+      <ul class ="breadCrumb"> 
+         <li><a href="http://localhost:8080/">Home</a></li>
+         <li><a href="http://localhost:8080/popular_movies">Trending Oscar Films</a></li>
+         <li>Category Selection</li>
+      </ul>
+
+   </div>
+      <!-- Category Dropdown Menu -->
+      <div id="yearDropDown"></div>
+    <script th:inline="javascript">
+         var award = /*[[${awards.listIterator()}]]*/ 'name';
+         var awardName = award[0].name;
+
+        fetch('http://localhost:8080/api/awards/search?name=' + awardName)
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (data) {
+                appendButton(data);
+            })
+            .catch(function (err) {
+                console.log('error: ' + err);
+            });
+        function appendButton(data) {
+            var mainContainer = document.getElementById("yearDropDown");
+            let tab = 
+                `<div class="dropdown">
+                    <button class="dropbtn">Select a Year</button>
+                        <div class="dropdown-content">
+                            `;
+
+            for (var i = 0; i < data.length; i++) {
+                tab +=
+                    `<a href="${'#' + data[i].year}">${data[i].year}</a>`;
+            }
+            tab +=
+                    `</div>
+                </div>`;
+            mainContainer.innerHTML = tab;
+        }
+    </script>
+
+      <!-- Row of Movies -->
+      <div th:each="award : ${awards.iterator()}">
+         <a th:id = "${award.getYear()}">
+            <p th:text="${award.getYear()}" id = "category">2021</p>
+         </a>
+
+            <!-- Column of Movies -->
+         <div class="row clearfix">
+            <div th:each="nomination : ${award.getNomination().iterator()}" class="column">
+               <a th:href="@{'http://localhost:8080/popular_movies/single_movie/'+${nomination.getMovie().getName()}+'/'+${nomination.getMovie().getYear()}}">
+                  <img alt="Alt text" th:src="${nomination.getMovie().getPoster()}" width="250" height="370">
+               </a>
+               <p th:text="${nomination.getMovie().getName()}"  id = "movieTitle1">Dunkirk</p>
+               <p th:text="${nomination.getMovie().getYear()}"  id = "movieYear1">2017</p>
+            </div>
+         </div>
+      </div>
+   </body>
+</html>
